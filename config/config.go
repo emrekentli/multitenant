@@ -87,7 +87,7 @@ func (cfg *AppConfig) LoadComponents() {
 	})
 	cfg.LoadStatic()
 	cfg.PrepareLog()
-	_ = cfg.Database.Setup()
+	_ = cfg.Database.InitDB()
 	_ = cfg.Session.Setup()
 	cfg.Cache.Setup()
 }

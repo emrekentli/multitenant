@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// Migration işlemlerini başlat
 func RunMigrations(db *sql.DB) error {
 	// Migrations tablosunu kontrol et ve oluştur
 	if err := ensureMigrationsTableExists(db, "public"); err != nil {

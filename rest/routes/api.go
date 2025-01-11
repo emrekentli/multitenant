@@ -2,7 +2,7 @@ package routes
 
 import (
 	"database/sql"
-	fmt2 "fmt"
+	"fmt"
 	"github.com/emrekentli/multitenant-boilerplate/app"
 	"github.com/emrekentli/multitenant-boilerplate/rest/middlewares"
 	"github.com/gofiber/fiber/v2"
@@ -13,12 +13,21 @@ func ApiRoutes(api fiber.Router) {
 }
 
 func Pong(c *fiber.Ctx) error {
-	tenantContext := c.Locals("tenant").(*middlewares.TenantContext)
-	tenantID := tenantContext.TenantID
+	tenantContext, ok := c.Locals("tenant").(*middlewares.TenantContext)
+	if !ok || tenantContext == nil {
+		return c.Status(500).SendString("Tenant context bulunamadı")
+	}
 
-	rows, err := app.Http.Database.DB.Query(fmt2.Sprintf("SELECT * FROM %s.products", tenantID))
+	schemaName := tenantContext.SchemaName
+
+	if app.Http.Database.DB == nil {
+		return c.Status(500).SendString("Veritabanı bağlantısı bulunamadı")
+	}
+
+	query := fmt.Sprintf("SELECT * FROM %s.products", schemaName)
+	rows, err := app.Http.Database.DB.Query(query)
 	if err != nil {
-		return c.Status(500).SendString("Veri çekilemedi")
+		return c.Status(500).SendString("Veri çekilemedi: " + err.Error())
 	}
 	defer func(rows *sql.Rows) {
 		err := rows.Close()
@@ -32,25 +41,24 @@ func Pong(c *fiber.Ctx) error {
 		var id int
 		var name string
 		var description string
-		var created_at string
+		var createdAt string
 		var price float64
-		err = rows.Scan(&id, &name, &price, &description, &created_at)
+		err = rows.Scan(&id, &name, &price, &description, &createdAt)
 		if err != nil {
-			return c.Status(500).SendString("Veri okuma hatası")
+			return c.Status(500).SendString("Veri okuma hatası: " + err.Error())
 		}
 		products = append(products, map[string]interface{}{
 			"id":          id,
 			"name":        name,
 			"price":       price,
 			"description": description,
-			"created_at":  created_at,
+			"createdAt":   createdAt,
 		})
 	}
 
 	if rows.Err() != nil {
-		return c.Status(500).SendString("Sorgu hatası")
+		return c.Status(500).SendString("Sorgu hatası: " + rows.Err().Error())
 	}
 
-	// JSON formatında ürün verilerini döndür
 	return c.JSON(products)
 }

@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-type DatabaseDriver struct {
-	Driver      string `yaml:"driver" env:"DB_DRIVER"`
+type DatabaseConfig struct {
+	DB          *sql.DB
 	Host        string `yaml:"host" env:"DB_HOST"`
 	Username    string `yaml:"username" env:"DB_USER"`
 	Password    string `yaml:"password" env:"DB_PASS"`
@@ -21,41 +21,32 @@ type DatabaseDriver struct {
 	Connections int    `yaml:"connections" env:"DB_CONNECTIONS"`
 }
 
-type DatabaseConfig struct {
-	DB      *sql.DB
-	Drivers map[string]DatabaseDriver `yaml:"drivers"`
-	Default DatabaseDriver            `yaml:"default" env:"DEFAULT_DB_DRIVER"`
-}
-
-func (d *DatabaseConfig) Setup() error {
+func (d *DatabaseConfig) InitDB() error {
 	var err error
 	var connectionString string
 
-	if d.DB != nil {
-		return nil
-	}
-
-	switch d.Default.Driver {
-	case "postgres":
-		connectionString = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
-			d.Default.Host, d.Default.Port, d.Default.Username, d.Default.DBName, d.Default.Password)
-		d.DB, err = sql.Open("postgres", connectionString)
-
-	default:
-		return fmt.Errorf("unsupported database driver: %s", d.Default.Driver)
-	}
+	connectionString = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
+		d.Host, d.Port, d.Username, d.DBName, d.Password)
+	d.DB, err = sql.Open("postgres", connectionString)
 
 	if err != nil {
 		log.Fatal("Database connection failed:", err)
 		return err
 	}
 
-	d.DB.SetMaxOpenConns(d.Default.Connections)
-	d.DB.SetMaxIdleConns(d.Default.Connections)
+	d.DB.SetMaxOpenConns(d.Connections)
+	d.DB.SetMaxIdleConns(d.Connections)
 	d.DB.SetConnMaxLifetime(24 * time.Hour)
 
+	if err = d.DB.Ping(); err != nil {
+		log.Fatal("Database connection ping failed:", err)
+		return err
+	}
+
+	log.Println("Database connection established successfully.")
 	return nil
 }
+
 func (d *DatabaseConfig) RunMigrations() error {
 	// public ve tenant klasörlerindeki SQL dosyalarını oku
 	err := d.ApplyMigrations("migrations/public")
