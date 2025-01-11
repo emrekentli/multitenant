@@ -2,9 +2,8 @@ package config
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	_ "github.com/lib/pq" // PostgreSQL driver
+	"github.com/jackc/pgx/v4/pgxpool"
 	"io/ioutil"
 	"log"
 	"strings"
@@ -12,34 +11,43 @@ import (
 )
 
 type DatabaseConfig struct {
-	DB          *sql.DB
+	DB          *pgxpool.Pool
 	Host        string `yaml:"host" env:"DB_HOST"`
 	Username    string `yaml:"username" env:"DB_USER"`
 	Password    string `yaml:"password" env:"DB_PASS"`
 	DBName      string `yaml:"db_name" env:"DB_NAME"`
 	Port        int    `yaml:"port" env:"DB_PORT"`
-	Connections int    `yaml:"connections" env:"DB_CONNECTIONS"`
+	Connections int    `yaml:"connections" env:"DB_CONNECTIONS"` // Maksimum bağlantı sayısı
 }
 
 func (d *DatabaseConfig) InitDB() error {
-	var err error
-	var connectionString string
+	connectionString := fmt.Sprintf(
+		"postgresql://%s:%s@%s:%d/%s",
+		d.Username, d.Password, d.Host, d.Port, d.DBName,
+	)
 
-	connectionString = fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=disable",
-		d.Host, d.Port, d.Username, d.DBName, d.Password)
-	d.DB, err = sql.Open("postgres", connectionString)
-
+	config, err := pgxpool.ParseConfig(connectionString)
 	if err != nil {
-		log.Fatal("Database connection failed:", err)
+		log.Fatalf("Unable to parse connection string: %v", err)
 		return err
 	}
 
-	d.DB.SetMaxOpenConns(d.Connections)
-	d.DB.SetMaxIdleConns(d.Connections)
-	d.DB.SetConnMaxLifetime(24 * time.Hour)
+	config.MaxConns = int32(d.Connections)    // Maksimum bağlantı sayısı
+	config.MinConns = 5                       // Minimum bağlantı sayısı
+	config.MaxConnLifetime = 30 * time.Minute // Bağlantıların maksimum yaşam süresi
+	config.MaxConnIdleTime = 5 * time.Minute  // Boşta kalan bağlantılar için maksimum süre
 
-	if err = d.DB.Ping(); err != nil {
-		log.Fatal("Database connection ping failed:", err)
+	d.DB, err = pgxpool.ConnectConfig(context.Background(), config)
+	if err != nil {
+		log.Fatalf("Failed to initialize database pool: %v", err)
+		return err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err = d.DB.Ping(ctx); err != nil {
+		log.Fatalf("Database connection ping failed: %v", err)
 		return err
 	}
 
@@ -48,14 +56,11 @@ func (d *DatabaseConfig) InitDB() error {
 }
 
 func (d *DatabaseConfig) RunMigrations() error {
-	// public ve tenant klasörlerindeki SQL dosyalarını oku
-	err := d.ApplyMigrations("migrations/public")
-	if err != nil {
+	if err := d.ApplyMigrations("migrations/public"); err != nil {
 		return err
 	}
 
-	err = d.ApplyMigrations("migrations/tenant")
-	if err != nil {
+	if err := d.ApplyMigrations("migrations/tenant"); err != nil {
 		return err
 	}
 
@@ -63,7 +68,6 @@ func (d *DatabaseConfig) RunMigrations() error {
 	return nil
 }
 
-// SQL dosyalarını uygula
 func (d *DatabaseConfig) ApplyMigrations(migrationFolder string) error {
 	files, err := ioutil.ReadDir(migrationFolder)
 	if err != nil {
@@ -72,8 +76,7 @@ func (d *DatabaseConfig) ApplyMigrations(migrationFolder string) error {
 
 	for _, file := range files {
 		if strings.HasSuffix(file.Name(), ".sql") {
-			err := d.applySQLFile(migrationFolder + "/" + file.Name())
-			if err != nil {
+			if err := d.applySQLFile(migrationFolder + "/" + file.Name()); err != nil {
 				return fmt.Errorf("failed to apply SQL file %s: %v", file.Name(), err)
 			}
 		}
@@ -82,17 +85,17 @@ func (d *DatabaseConfig) ApplyMigrations(migrationFolder string) error {
 	return nil
 }
 
-// SQL dosyasını çalıştır
 func (d *DatabaseConfig) applySQLFile(filePath string) error {
-	// SQL dosyasını oku
 	sqlBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to read SQL file %s: %v", filePath, err)
 	}
 
-	// SQL sorgusunu çalıştır
 	sql := string(sqlBytes)
-	_, err = d.DB.Exec(sql)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = d.DB.Exec(ctx, sql)
 	if err != nil {
 		return fmt.Errorf("failed to execute SQL file %s: %v", filePath, err)
 	}
@@ -109,12 +112,18 @@ func logSQL(ctx context.Context, query string, args []interface{}, duration time
 	log.Printf("INFO: Query: %s | Args: %v | Duration: %v\n", query, args, duration)
 }
 
-// Execute a query example
 func (d *DatabaseConfig) ExecuteQuery(ctx context.Context, query string, args ...interface{}) error {
 	start := time.Now()
-	_, err := d.DB.ExecContext(ctx, query, args...)
+	_, err := d.DB.Exec(ctx, query, args...)
 	duration := time.Since(start)
 
 	logSQL(ctx, query, args, duration, err)
 	return err
+}
+
+func (d *DatabaseConfig) Close() {
+	if d.DB != nil {
+		d.DB.Close()
+		log.Println("Database connection pool closed.")
+	}
 }
