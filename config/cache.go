@@ -1,29 +1,41 @@
 package config
 
-//import (
-//	"github.com/gofiber/storage/redis"
-//)
+import (
+	"log"
+	"os"
+	"strconv"
+)
 
 type CacheConfig struct {
-	//*redis.Storage
-	Driver string `yaml:"driver" env:"CACHE_DRIVER"`
-	Name   string `yaml:"name" env:"CACHE_NAME"`
-	Host   string `yaml:"host" env:"CACHE_HOST"`
-	Port   int    `yaml:"port" env:"CACHE_PORT"`
-	DB     int    `yaml:"db" env:"CACHE_DB"`
+	Driver string
+	Name   string
+	Host   string
+	Port   int
 }
 
 func (c *CacheConfig) Setup() {
-	//switch c.Driver {
-	//case "hazelcast":
-	//default:
-	//	// Initialize custom config
-	//	store := redis.New(redis.Config{
-	//		Host:     c.Host,
-	//		Port:     c.Port,
-	//		Database: c.DB,
-	//	})
-	//	c.Storage = store
-	//}
+	c.Driver = os.Getenv("CACHE_DRIVER")
+	if c.Driver == "" {
+		c.Driver = "default_driver" // Add a default value if needed
+	}
 
+	c.Name = os.Getenv("CACHE_NAME")
+	if c.Name == "" {
+		c.Name = "default_name"
+	}
+
+	c.Host = os.Getenv("CACHE_HOST")
+	if c.Host == "" {
+		c.Host = "localhost"
+	}
+	portStr := os.Getenv("CACHE_PORT")
+	if portStr == "" {
+		c.Port = 6379
+	} else {
+		port, err := strconv.Atoi(portStr)
+		if err != nil {
+			log.Fatalf("Invalid port number: %v", err)
+		}
+		c.Port = port
+	}
 }

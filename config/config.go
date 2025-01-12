@@ -2,44 +2,34 @@ package config
 
 import (
 	"fmt"
+	"github.com/emrekentli/multitenant-boilerplate/config/database"
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/oarkflow/log"
 	"os"
 	"path/filepath"
-	"time"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/ilyakaznacheev/cleanenv"
-	"github.com/joho/godotenv"
-	"github.com/oarkflow/log"
 )
 
 type AppConfig struct {
 	Mail       Mail
 	Hash       Hash
-	View       ViewConfig     `yaml:"view"`
-	Cache      CacheConfig    `yaml:"cache"`
-	Database   DatabaseConfig `yaml:"database"`
-	Session    SessionConfig  `yaml:"session"`
-	JwtSecrets JwtSecrets     `yaml:"jwt"`
-	Server     ServerConfig   `yaml:"server"`
-	Log        LogConfig      `yaml:"log"`
-	Token      Token          `yaml:"token"`
-	ConfigFile string
+	View       ViewConfig
+	Cache      CacheConfig
+	Database   database.DatabaseConfig
+	Session    SessionConfig
+	JwtSecrets JwtSecrets
+	Server     ServerConfig
+	Log        LogConfig
+	Token      Token
 }
 
 func (cfg *AppConfig) Setup() {
-	if err := godotenv.Load(); err != nil {
-		log.Warn()
-	}
-
-	if err := cleanenv.ReadConfig(cfg.ConfigFile, cfg); err != nil {
-		log.Panic()
-	}
-
-	cfg.Server.LoadPath()
-	cfg.View.Load(cfg.Server.Path)
-	cfg.Mail.View = &cfg.View
+	cfg.View.Load()
 	cfg.Server.TemplateEngine = cfg.View.Template.TemplateEngine
-	cfg.Server.Setup()
+	err := cfg.Server.Setup()
+	if err != nil {
+		return
+	}
+	cfg.Mail.View = &cfg.View
 	cfg.LoadComponents()
 }
 
@@ -61,33 +51,17 @@ func (cfg *AppConfig) PrepareLog() {
 }
 
 func (cfg *AppConfig) createLogWriter(level string, path string) *log.FileWriter {
+	pathWd, _ := os.Getwd()
 	return &log.FileWriter{
-		Filename:     filepath.Join(MakeDir(filepath.Join(cfg.Server.Path, path)), fmt.Sprintf("%s.log", level)),
+		Filename:     filepath.Join(MakeDir(filepath.Join(pathWd, path)), fmt.Sprintf("%s.log", level)),
 		EnsureFolder: true,
 		TimeFormat:   cfg.Log.TimeFormat,
 	}
 }
 
-func (cfg *AppConfig) Route404() {
-	cfg.Server.Use(func(c *fiber.Ctx) error {
-		return c.Status(fiber.StatusNotFound).Render("404", fiber.Map{
-			"Title": "Page Not Found",
-		})
-	})
-}
-
 func (cfg *AppConfig) LoadComponents() {
-	cfg.LoadStatic()
 	cfg.PrepareLog()
 	_ = cfg.Database.InitDB()
 	_ = cfg.Session.Setup()
 	cfg.Cache.Setup()
-}
-
-func (cfg *AppConfig) LoadStatic() {
-	cfg.Server.Static("/", filepath.Join(cfg.Server.Path, cfg.Server.PublicPath), fiber.Static{
-		Compress:      true,
-		ByteRange:     true,
-		CacheDuration: 24 * time.Hour,
-	})
 }

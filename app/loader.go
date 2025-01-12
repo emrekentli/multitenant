@@ -2,18 +2,22 @@ package app
 
 import (
 	"github.com/emrekentli/multitenant-boilerplate/config"
-	"github.com/gofiber/fiber/v2/middleware/compress"
-	"github.com/gofiber/fiber/v2/middleware/etag"
-	"github.com/gofiber/fiber/v2/middleware/pprof"
-	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/emrekentli/multitenant-boilerplate/migrations"
+	"github.com/gofiber/fiber/v3/middleware/compress"
+	"github.com/gofiber/fiber/v3/middleware/etag"
+	"github.com/gofiber/fiber/v3/middleware/recover"
 )
 
 var Http *config.AppConfig
 
-func Load(configFile string) {
-	Http = &config.AppConfig{ConfigFile: configFile}
+func Load() {
+	Http = &config.AppConfig{}
 	Http.Setup()
 	LoadBuiltInMiddlewares(Http)
+	err := migrations.RunMigrations()
+	if err != nil {
+		return
+	}
 }
 
 func LoadBuiltInMiddlewares(app *config.AppConfig) {
@@ -22,7 +26,5 @@ func LoadBuiltInMiddlewares(app *config.AppConfig) {
 	app.Server.Use(compress.New(compress.Config{
 		Level: 1, // Sıkıştırma seviyesi (1: minimum, 9: maksimum)
 	}))
-	if app.Server.Debug {
-		app.Server.Use(pprof.New())
-	}
+
 }

@@ -1,14 +1,6 @@
 package config
 
-import (
-	_ "fmt"
-	"github.com/gofiber/session/v2"
-	//"github.com/gofiber/session/v2/provider/redis"
-	_ "time"
-)
-
 type SessionConfig struct {
-	*session.Session
 	Driver string `yaml:"driver" env:"SESSION_DRIVER"`
 	Name   string `yaml:"name" env:"SESSION_NAME"`
 	Host   string `yaml:"host" env:"SESSION_HOST"`
