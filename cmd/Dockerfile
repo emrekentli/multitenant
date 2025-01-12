@@ -2,7 +2,7 @@ FROM golang:alpine
 RUN mkdir /app
 ADD . /app/
 WORKDIR /app
-COPY resources .
+COPY src/resources .
 COPY go.mod .
 COPY go.sum .
 RUN go build -o main .

@@ -1,4 +1,4 @@
-CREATE TABLE schemaName.products (
+CREATE TABLE IF NOT EXISTS schemaName.products (
                                 id SERIAL PRIMARY KEY,
                                 name VARCHAR(255) NOT NULL,
                                 description TEXT,

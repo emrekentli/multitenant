@@ -1,4 +1,4 @@
-package migrate
+package migrations
 
 import (
 	"context"
@@ -20,7 +20,7 @@ func RunMigrations(db *pgxpool.Pool) error {
 	}
 
 	// Public migrationları uygula
-	if err := applyMigrations(ctx, db, "public", "migrate/public"); err != nil {
+	if err := applyMigrations(ctx, db, "public", "migrations/public"); err != nil {
 		return fmt.Errorf("public migrations error: %v", err)
 	}
 
@@ -32,7 +32,7 @@ func RunMigrations(db *pgxpool.Pool) error {
 
 	// Her tenant için migrationları uygula
 	for _, tenant := range tenants {
-		if err := applyMigrations(ctx, db, tenant, "migrate/tenant"); err != nil {
+		if err := applyMigrations(ctx, db, tenant, "migrations/tenant"); err != nil {
 			return fmt.Errorf("tenant %s migration error: %v", tenant, err)
 		}
 	}

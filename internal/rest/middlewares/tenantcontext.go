@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/app"
+	"github.com/emrekentli/multitenant-boilerplate/internal/app"
 	"github.com/gofiber/fiber/v2"
 	"log"
 )
