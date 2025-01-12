@@ -64,7 +64,7 @@ func PageToResponseList[T any, R any](page *Page[T], convertFunc func(*T) *R) *P
 }
 func ListToResponseList[T any, R any](list []T, convertFunc func(T) R) []R {
 	if list == nil {
-		return nil
+		return []R{}
 	}
 
 	var resContent []R

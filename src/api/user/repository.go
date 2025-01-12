@@ -6,6 +6,7 @@ import (
 	"github.com/emrekentli/multitenant-boilerplate/src/util/query"
 	"github.com/emrekentli/multitenant-boilerplate/src/util/rest"
 	"github.com/jackc/pgx/v5"
+	"strings"
 )
 
 const getAllQuery = `SELECT id, created, modified, email, password FROM schemaName.usr ORDER BY id LIMIT $1 OFFSET $2`
@@ -46,7 +47,8 @@ func scanModal(rows pgx.Rows) (*Modal, error) {
 
 func FindByEmailAndPassword(modalLoginRequest *ModalRequest) (*Modal, error) {
 	var modal Modal
-	err := database.DB.QueryRow(context.Background(), findByEmailAndPasswordQuery, modalLoginRequest.Email, modalLoginRequest.Password).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
+	replacedSql := strings.ReplaceAll(findByEmailAndPasswordQuery, "schemaName", "istikbal")
+	err := database.DB.QueryRow(context.Background(), replacedSql, modalLoginRequest.Email, modalLoginRequest.Password).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -55,7 +57,8 @@ func FindByEmailAndPassword(modalLoginRequest *ModalRequest) (*Modal, error) {
 
 func GetByIdDB(id string) (*Modal, error) {
 	var modal Modal
-	err := database.DB.QueryRow(context.Background(), getByIdQuery, id).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
+	replacedSql := strings.ReplaceAll(getByIdQuery, "schemaName", "istikbal")
+	err := database.DB.QueryRow(context.Background(), replacedSql, id).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -63,16 +66,19 @@ func GetByIdDB(id string) (*Modal, error) {
 }
 
 func CreateDB(modal *Modal) error {
-	err := database.DB.QueryRow(context.Background(), createQuery, modal.Email, modal.Password).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
+	replacedSql := strings.ReplaceAll(createQuery, "schemaName", "istikbal")
+	err := database.DB.QueryRow(context.Background(), replacedSql, modal.Email, modal.Password).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
 	return err
 }
 
 func UpdateDB(modal *Modal, id string) error {
-	err := database.DB.QueryRow(context.Background(), updateByIdQuery, modal.Email, modal.Password, id).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
+	replacedSql := strings.ReplaceAll(updateByIdQuery, "schemaName", "istikbal")
+	err := database.DB.QueryRow(context.Background(), replacedSql, modal.Email, modal.Password, id).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
 	return err
 }
 
 func DeleteDB(modalDeleteRequest *ModalDeleteRequest) error {
-	_, err := database.DB.Exec(context.Background(), deleteByIdsQuery, modalDeleteRequest.IdList)
+	replacedSql := strings.ReplaceAll(deleteByIdsQuery, "schemaName", "istikbal")
+	_, err := database.DB.Exec(context.Background(), replacedSql, modalDeleteRequest.IdList)
 	return err
 }

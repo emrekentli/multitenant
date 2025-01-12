@@ -5,6 +5,7 @@ import (
 	"github.com/emrekentli/multitenant-boilerplate/config/database"
 	"github.com/emrekentli/multitenant-boilerplate/src/util/query"
 	"github.com/jackc/pgx/v5"
+	"strings"
 )
 
 const deleteByIdsQuery = `
@@ -35,11 +36,13 @@ func scanModal(rows pgx.Rows) (*Modal, error) {
 }
 
 func CreateDB(modal *Modal) error {
-	err := database.DB.QueryRow(context.Background(), createQuery, modal.Name).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Name)
+	replacedSQL := strings.ReplaceAll(createQuery, "schemaName", "istikbal")
+	err := database.DB.QueryRow(context.Background(), replacedSQL, modal.Name).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Name)
 	return err
 }
 
 func DeleteDB(modalDeleteRequest *ModalDeleteRequest) error {
-	_, err := database.DB.Exec(context.Background(), deleteByIdsQuery, modalDeleteRequest.IdList)
+	replacedSQL := strings.ReplaceAll(deleteByIdsQuery, "schemaName", "istikbal")
+	_, err := database.DB.Exec(context.Background(), replacedSQL, modalDeleteRequest.IdList)
 	return err
 }
