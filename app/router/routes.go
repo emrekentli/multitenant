@@ -7,8 +7,9 @@ import (
 
 func LoadRoutes(app *fiber.App) {
 	app.Use(middlewares.SetTenantContext)
-	api := app.Group("api")
+	api := app.Group("/api")
 	web := app.Group("")
 	ApiRoutes(api)
 	WebRoutes(web)
+
 }
