@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"github.com/emrekentli/multitenant-boilerplate/app"
+	"github.com/emrekentli/multitenant-boilerplate/app/router"
 	"github.com/emrekentli/multitenant-boilerplate/migrations"
-	"github.com/emrekentli/multitenant-boilerplate/src/rest/routes"
 	"log"
 )
 
@@ -16,7 +16,7 @@ func main() {
 	if err != nil {
 		return
 	}
-	routes.LoadRoutes(app.Http.Server.App)
+	router.LoadRoutes(app.Http.Server.App)
 	app.Http.Route404()
 	log.Fatal(app.Http.Server.ServeWithGraceFullShutdown())
 

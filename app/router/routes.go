@@ -1,7 +1,7 @@
-package routes
+package router
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/src/rest/middlewares"
+	"github.com/emrekentli/multitenant-boilerplate/app/middlewares"
 	"github.com/gofiber/fiber/v2"
 )
 

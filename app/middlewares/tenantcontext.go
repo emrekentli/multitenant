@@ -19,7 +19,6 @@ func SetTenantContext(c *fiber.Ctx) error {
 	}
 
 	var schemaName string
-	// app.Http.Database.DB is *pgxpool.Pool
 	err := app.Http.Database.DB.QueryRow(c.Context(), "SELECT schema_name FROM tenants WHERE domain = $1", tenantDomain).Scan(&schemaName)
 	if err != nil {
 		log.Println("Tenant bulunamadı:", err)

@@ -10,8 +10,6 @@ import (
 	"github.com/ilyakaznacheev/cleanenv"
 	"github.com/joho/godotenv"
 	"github.com/oarkflow/log"
-	"github.com/sujit-baniya/flash"
-	"github.com/sujit-baniya/ip"
 )
 
 type AppConfig struct {
@@ -25,8 +23,6 @@ type AppConfig struct {
 	Server     ServerConfig   `yaml:"server"`
 	Log        LogConfig      `yaml:"log"`
 	Token      Token          `yaml:"token"`
-	Flash      *flash.Flash
-	GeoIP      *ip.GeoIpDB
 	ConfigFile string
 }
 
@@ -81,10 +77,6 @@ func (cfg *AppConfig) Route404() {
 }
 
 func (cfg *AppConfig) LoadComponents() {
-	cfg.Flash = flash.New(flash.Config{
-		Name:     "fiber",
-		HTTPOnly: true,
-	})
 	cfg.LoadStatic()
 	cfg.PrepareLog()
 	_ = cfg.Database.InitDB()
