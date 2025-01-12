@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"github.com/emrekentli/multitenant-boilerplate/internal/app"
-	"github.com/emrekentli/multitenant-boilerplate/internal/rest/routes"
+	"github.com/emrekentli/multitenant-boilerplate/app"
 	"github.com/emrekentli/multitenant-boilerplate/migrations"
+	"github.com/emrekentli/multitenant-boilerplate/src/rest/routes"
 	"log"
 )
 

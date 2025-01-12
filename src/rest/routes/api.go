@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/internal/app"
-	"github.com/emrekentli/multitenant-boilerplate/internal/rest/middlewares"
+	"github.com/emrekentli/multitenant-boilerplate/app"
+	"github.com/emrekentli/multitenant-boilerplate/src/rest/middlewares"
 	"github.com/gofiber/fiber/v2"
 	"time"
 )

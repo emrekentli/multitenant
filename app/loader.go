@@ -20,7 +20,7 @@ func LoadBuiltInMiddlewares(app *config.AppConfig) {
 	app.Server.Use(recover.New())
 	app.Server.Use(etag.New())
 	app.Server.Use(compress.New(compress.Config{
-		Level: 1,
+		Level: 1, // Sıkıştırma seviyesi (1: minimum, 9: maksimum)
 	}))
 	if app.Server.Debug {
 		app.Server.Use(pprof.New())
