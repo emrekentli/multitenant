@@ -6,7 +6,7 @@ services:
       - "--providers.docker.exposedbydefault=false"
       - "--entryPoints.websecure.address=:443"
       - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      - "--certificatesresolvers.myresolver.acme.email=main@escarayis.com"
+      - "--certificatesresolvers.myresolver.acme.email=main@boilerplate.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
@@ -24,7 +24,7 @@ services:
       - letsencrypt:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock
   backend:
-    image: ghcr.io/havoctechnology/backend:${GIT_COMMIT_HASH}
+    image: ghcr.io/example/backend:${GIT_COMMIT_HASH}
     environment:
       - DB_HOST=host.docker.internal
       - DB_PORT=5432
@@ -55,7 +55,7 @@ services:
     labels:
       #      - "traefik.enable=true"
       #      - "traefik.http.middlewares.backend-ratelimit.ratelimit.average=20"
-      #      - "traefik.http.routers.backend.rule=Host(`escarayis.com`) && !Method(`POST`)"
+      #      - "traefik.http.routers.backend.rule=Host(`example.com`) && !Method(`POST`)"
       #      - "traefik.http.services.backend.loadbalancer.server.port=8080"
       #      - "traefik.http.routers.backend.entrypoints=websecure"
       #      - "traefik.http.routers.backend.tls.certresolver=myresolver"
@@ -68,11 +68,11 @@ services:
       #      - "traefik.http.routers.backend-post.tls.certresolver=myresolver"
 
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`escarayis.com`) && !Method(`POST`)"
+      - "traefik.http.routers.backend.rule=Host(`boilerplate.com`) && !Method(`POST`)"
       - "traefik.http.services.backend.loadbalancer.server.port=8080"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
-      - "traefik.http.routers.backend-post.rule=Host(`escarayis.com`) && Method(`POST`)"
+      - "traefik.http.routers.backend-post.rule=Host(`boilerplate.com`) && Method(`POST`)"
       - "traefik.http.routers.backend-post.entrypoints=websecure"
       - "traefik.http.routers.backend-post.tls.certresolver=myresolver"
 volumes:
