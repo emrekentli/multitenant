@@ -1,8 +1,8 @@
 package blog
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/src/api/tag"
-	"github.com/emrekentli/multitenant-boilerplate/src/util/rest"
+	"app/src/api/tag"
+	"app/src/general/util/rest"
 )
 
 func requestToModal(request *ModalRequest) *Modal {

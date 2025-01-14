@@ -1,8 +1,7 @@
 package user
 
 import (
-	"app/src/general/middlewares/jwt"
-	"app/src/general/util/rest"
+	"github.com/emrekentli/multitenant-boilerplate/src/util/rest"
 )
 
 func GetAll(limit int, offset int) (*rest.Page[Modal], error) {

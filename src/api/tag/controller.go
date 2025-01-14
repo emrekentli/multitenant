@@ -1,7 +1,7 @@
 package tag
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/src/util/rest"
+	"app/src/general/util/rest"
 	"github.com/gofiber/fiber/v3"
 )
 

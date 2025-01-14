@@ -1,9 +1,10 @@
 package blog
 
 import (
+	"app/src/general/constants"
+	"app/src/general/database"
+	"app/src/general/util/query"
 	"context"
-	"github.com/emrekentli/multitenant-boilerplate/config/database"
-	"github.com/emrekentli/multitenant-boilerplate/src/util/query"
 	"github.com/jackc/pgx/v5"
 	"strings"
 )
@@ -107,8 +108,9 @@ GROUP BY
 
 `
 
-func GetAllDB(limit, offset int, order string) ([]*Modal, error) {
-	res, err := query.GetAll[Modal](getAllQuery, scanModal, limit, offset, order)
+func GetAllDB(tenantSchema string, limit, offset int, order string) ([]*Modal, error) {
+	replacedSQL := strings.ReplaceAll(getAllQuery, constants.SchemaName, tenantSchema)
+	res, err := query.GetAll[Modal](replacedSQL, scanModal, limit, offset, order)
 	return res, err
 }
 
@@ -121,29 +123,29 @@ func scanModal(rows pgx.Rows) (*Modal, error) {
 	return &modal, nil
 }
 
-func CreateDB(modal *Modal) error {
+func CreateDB(schemaName string, modal *Modal) error {
 	var tagIds = make([]int64, len(modal.Tags))
 	for i, tag := range modal.Tags {
 		tagIds[i] = tag.Id
 	}
-	replacedSQL := strings.ReplaceAll(createQuery, "schemaName", "istikbal")
+	replacedSQL := strings.ReplaceAll(createQuery, constants.SchemaName, schemaName)
 	err := database.DB.QueryRow(context.Background(), replacedSQL, modal.Body, modal.Image, modal.Slug, tagIds).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Slug, &modal.Body, &modal.Image, &modal.Tags)
 	return err
 }
 
-func UpdateDB(modal *Modal, id string) error {
+func UpdateDB(schemaName string, modal *Modal, id string) error {
 	var tagIds = make([]int64, len(modal.Tags))
 	for i, tag := range modal.Tags {
 		tagIds[i] = tag.Id
 	}
-	replacedSQL := strings.ReplaceAll(updateQuery, "schemaName", "istikbal")
+	replacedSQL := strings.ReplaceAll(updateQuery, constants.SchemaName, schemaName)
 	err := database.DB.QueryRow(context.Background(), replacedSQL, modal.Body, modal.Image, modal.Slug, tagIds, id).
 		Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Body, &modal.Image, &modal.Slug, &modal.Tags)
 	return err
 }
 
-func DeleteDB(modalDeleteRequest *ModalDeleteRequest) error {
-	replacedSQL := strings.ReplaceAll(deleteByIdsQuery, "schemaName", "istikbal")
+func DeleteDB(schemaName string, modalDeleteRequest *ModalDeleteRequest) error {
+	replacedSQL := strings.ReplaceAll(deleteByIdsQuery, constants.SchemaName, schemaName)
 	_, err := database.DB.Exec(context.Background(), replacedSQL, modalDeleteRequest.IdList)
 	return err
 }

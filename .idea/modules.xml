@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/multitenant.iml" filepath="$PROJECT_DIR$/multitenant.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/multitenantv2.iml" filepath="$PROJECT_DIR$/.idea/multitenantv2.iml" />
     </modules>
   </component>
 </project>

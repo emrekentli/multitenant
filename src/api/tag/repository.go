@@ -1,9 +1,9 @@
 package tag
 
 import (
+	"app/src/general/database"
+	"app/src/general/util/query"
 	"context"
-	"github.com/emrekentli/multitenant-boilerplate/config/database"
-	"github.com/emrekentli/multitenant-boilerplate/src/util/query"
 	"github.com/jackc/pgx/v5"
 	"strings"
 )
@@ -22,6 +22,7 @@ const getAllQuery = `SELECT * FROM schemaName.tag ORDER BY id LIMIT $1 OFFSET $2
 const createQuery = `INSERT INTO schemaName.tag (name) VALUES ($1) RETURNING *`
 
 func GetAllDB(limit, offset int) ([]*Modal, error) {
+
 	res, err := query.GetAll[Modal](getAllQuery, scanModal, limit, offset)
 	return res, err
 }

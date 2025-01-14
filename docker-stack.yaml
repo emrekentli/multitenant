@@ -1,0 +1,87 @@
+services:
+  reverse-proxy:
+    image: traefik:v3.1
+    command:
+      - "--providers.docker"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=main@escarayis.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+    ports:
+      - mode: host
+        protocol: tcp
+        published: 80
+        target: 80
+      - mode: host
+        protocol: tcp
+        published: 443
+        target: 443
+    volumes:
+      - letsencrypt:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock
+  backend:
+    image: ghcr.io/havoctechnology/backend:${GIT_COMMIT_HASH}
+    environment:
+      - DB_HOST=host.docker.internal
+      - DB_PORT=5432
+      - DB_DATABASE=postgres
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=/run/secrets/db_password
+      - DB_SCHEMA=public
+      - DB_SSL_MODE=disable
+      - jwt_secret=/run/secrets/jwt_secret
+      - ENV=production
+      - APP_NAME=backend
+      - PORT=8080
+      - CACHE_HOST=host.docker.internal
+      - CACHE_PORT=6379
+      - CACHE_PASSWORD=/run/secrets/cache_password
+      - CACHE_DB=0
+      - AMP_OPTIMIZER_URL=http://ampoptimizer:3000
+    secrets:
+      - db_password
+      - jwt_secret
+      - cache_password
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      mode: replicated
+      replicas: 3
+    restart: always
+    labels:
+      #      - "traefik.enable=true"
+      #      - "traefik.http.middlewares.backend-ratelimit.ratelimit.average=20"
+      #      - "traefik.http.routers.backend.rule=Host(`escarayis.com`) && !Method(`POST`)"
+      #      - "traefik.http.services.backend.loadbalancer.server.port=8080"
+      #      - "traefik.http.routers.backend.entrypoints=websecure"
+      #      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      #      - "traefik.http.routers.backend.middlewares=backend-ratelimit"
+      #      - "traefik.http.middlewares.backend-ratelimit-post.ratelimit.average=1"
+      #      - "traefik.http.middlewares.backend-ratelimit-post.ratelimit.period=1m"
+      #      - "traefik.http.routers.backend-post.rule=Host(`escarayis.com`) && Method(`POST`)"
+      #      - "traefik.http.routers.backend-post.middlewares=backend-ratelimit-post"
+      #      - "traefik.http.routers.backend-post.entrypoints=websecure"
+      #      - "traefik.http.routers.backend-post.tls.certresolver=myresolver"
+
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`escarayis.com`) && !Method(`POST`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=8080"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
+      - "traefik.http.routers.backend-post.rule=Host(`escarayis.com`) && Method(`POST`)"
+      - "traefik.http.routers.backend-post.entrypoints=websecure"
+      - "traefik.http.routers.backend-post.tls.certresolver=myresolver"
+volumes:
+  letsencrypt:
+
+secrets:
+  db_password:
+    external: true
+  jwt_secret:
+    external: true
+  cache_password:
+    external: true

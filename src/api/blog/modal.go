@@ -1,7 +1,7 @@
 package blog
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/src/api/tag"
+	"app/src/api/tag"
 	"time"
 )
 

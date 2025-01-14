@@ -1,11 +1,9 @@
 package main
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/app"
-	"log"
+	"app/app"
 )
 
 func main() {
 	app.Load()
-	log.Fatal(app.Http.Server.ServeWithGraceFullShutdown())
 }

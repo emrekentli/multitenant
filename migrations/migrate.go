@@ -1,9 +1,9 @@
 package migrations
 
 import (
+	"app/src/general/database"
 	"context"
 	"fmt"
-	"github.com/emrekentli/multitenant-boilerplate/config/database"
 	"log"
 	"os"
 	"strings"

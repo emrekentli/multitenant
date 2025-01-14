@@ -1,13 +1,15 @@
 package blog
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/src/util/rest"
+	"app/app/middlewares/tenantcontext"
+	"app/src/general/util/rest"
 	"github.com/gofiber/fiber/v3"
 )
 
 func getAll(c fiber.Ctx) error {
+	schemaName := tenantcontext.GetTenantSchemaName(c)
 	limit, offset, order := rest.GetPageParamsWithSort(c)
-	res, err := GetAll(limit, offset, order)
+	res, err := GetAll(schemaName, limit, offset, order)
 	return rest.Res(c, err, res)
 }
 
@@ -17,7 +19,8 @@ func create(c fiber.Ctx) error {
 	if err != nil {
 		return rest.Res(c, err, nil)
 	}
-	res, err := Create(requestToModal(&modal))
+	schemaName := tenantcontext.GetTenantSchemaName(c)
+	res, err := Create(schemaName, requestToModal(&modal))
 	return rest.Res(c, err, ModalToResponse(res))
 }
 
@@ -28,23 +31,27 @@ func update(c fiber.Ctx) error {
 	if err != nil {
 		return rest.Res(c, err, nil)
 	}
-	err = Update(id, requestToModal(&modal))
+	schemaName := tenantcontext.GetTenantSchemaName(c)
+
+	err = Update(schemaName, id, requestToModal(&modal))
 	return rest.Res(c, err, nil)
 }
 
 func deleteByIds(c fiber.Ctx) error {
+
 	var modalDeleteRequest ModalDeleteRequest
 	err := rest.SetBodyAndValidate(c, &modalDeleteRequest)
 	if err != nil {
 		return rest.Res(c, err, nil)
 	}
-
-	err = Delete(&modalDeleteRequest)
+	schemaName := tenantcontext.GetTenantSchemaName(c)
+	err = Delete(schemaName, &modalDeleteRequest)
 	return rest.Res(c, err, nil)
 }
 
 func Register(router fiber.Router) {
 	group := router.Group("/blog")
+	group.Use(tenantcontext.RegisterTenantContext)
 	group.Get("/", getAll)
 	group.Post("/", create)
 	group.Put("/:id", update)
