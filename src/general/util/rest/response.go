@@ -64,10 +64,10 @@ func PageToResponseList[T any, R any](page *Page[T], convertFunc func(*T) *R) *P
 }
 func ListToResponseList[T any, R any](list []T, convertFunc func(T) R) []R {
 	if list == nil {
-		return nil
+		return []R{}
 	}
 
-	var resContent []R
+	var resContent []R = make([]R, 0)
 	for _, item := range list {
 		resContent = append(resContent, convertFunc(item))
 	}

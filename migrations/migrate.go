@@ -2,6 +2,7 @@ package migrations
 
 import (
 	"app/src/general/database"
+	"app/src/general/util/hash"
 	"context"
 	"fmt"
 	"log"
@@ -89,8 +90,8 @@ func applySQLFile(ctx context.Context, tenant, filePath string) error {
 		log.Printf("Error reading SQL file %s: %v", filePath, err)
 		return fmt.Errorf("reading SQL file %s error: %v", filePath, err)
 	}
-
-	replacedSQL := strings.ReplaceAll(string(data), "schemaName", tenant)
+	defaultPassword := hash.Hash("123456")
+	replacedSQL := strings.ReplaceAll(strings.ReplaceAll(string(data), "schemaName", tenant), "defaultPassword", defaultPassword)
 	if _, err := database.DB.Exec(ctx, replacedSQL); err != nil {
 		log.Printf("Error executing SQL file %s for tenant %s: %v", filePath, tenant, err)
 		return fmt.Errorf("executing SQL file %s error: %v", filePath, err)

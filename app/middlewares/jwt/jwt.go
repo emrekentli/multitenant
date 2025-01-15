@@ -77,11 +77,12 @@ func VerifyToken(tokenString string) (*jwt.Token, error) {
 	return token, nil
 }
 
-func CreateJwt(id int64) (string, error) {
+func CreateJwt(id int64, permissions []*string) (string, error) {
 	day := 24 * time.Hour
 	claims := jwt.MapClaims{
-		"ID":  id,
-		"exp": time.Now().Add(day * 1).Unix(),
+		"ID":          id,
+		"exp":         time.Now().Add(day * 1).Unix(),
+		"permissions": permissions,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	t, err := token.SignedString(config.JwtSecretByte)
