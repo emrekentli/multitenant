@@ -1,13 +1,15 @@
 package user
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/src/util/rest"
+	"app/app/middlewares/tenantcontext"
+	"app/src/general/util/rest"
 	"github.com/gofiber/fiber/v3"
 )
 
 func getAll(c fiber.Ctx) error {
 	limit, offset := rest.GetPageParams(c)
-	res, err := GetAll(limit, offset)
+	schemaName := tenantcontext.GetTenantSchemaName(c)
+	res, err := GetAll(schemaName, limit, offset)
 	return rest.Res(c, err, rest.PageToResponseList(res, modalToResponse))
 }
 
@@ -17,8 +19,8 @@ func login(c fiber.Ctx) error {
 	if err != nil {
 		return rest.Res(c, err, nil)
 	}
-
-	res, err := Login(&modalLoginRequest)
+	schemaName := tenantcontext.GetTenantSchemaName(c)
+	res, err := Login(schemaName, &modalLoginRequest)
 	return rest.Res(c, err, res)
 }
 
@@ -28,8 +30,8 @@ func create(c fiber.Ctx) error {
 	if err != nil {
 		return rest.Res(c, err, nil)
 	}
-
-	res, err := Create(requestToModal(&modal))
+	schemaName := tenantcontext.GetTenantSchemaName(c)
+	res, err := Create(schemaName, requestToModal(&modal))
 	return rest.Res(c, err, modalToResponse(res))
 }
 
@@ -39,9 +41,9 @@ func update(c fiber.Ctx) error {
 	if err != nil {
 		return rest.Res(c, err, nil)
 	}
-
+	schemaName := tenantcontext.GetTenantSchemaName(c)
 	id := c.Params("id")
-	err = Update(id, &modal)
+	err = Update(schemaName, id, &modal)
 	return rest.Res(c, err, &modal)
 }
 
@@ -51,8 +53,8 @@ func deleteByIds(c fiber.Ctx) error {
 	if err != nil {
 		return rest.Res(c, err, nil)
 	}
-
-	err = Delete(&modalDeleteRequest)
+	schemaName := tenantcontext.GetTenantSchemaName(c)
+	err = Delete(schemaName, &modalDeleteRequest)
 	return rest.Res(c, err, nil)
 }
 

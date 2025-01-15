@@ -1,6 +1,7 @@
 package tag
 
 import (
+	"app/src/general/constants"
 	"app/src/general/database"
 	"app/src/general/util/query"
 	"context"
@@ -21,9 +22,9 @@ const getAllQuery = `SELECT * FROM schemaName.tag ORDER BY id LIMIT $1 OFFSET $2
 
 const createQuery = `INSERT INTO schemaName.tag (name) VALUES ($1) RETURNING *`
 
-func GetAllDB(limit, offset int) ([]*Modal, error) {
-
-	res, err := query.GetAll[Modal](getAllQuery, scanModal, limit, offset)
+func GetAllDB(schemaName string, limit, offset int) ([]*Modal, error) {
+	replacedSql := strings.ReplaceAll(getAllQuery, constants.SchemaName, schemaName)
+	res, err := query.GetAll[Modal](replacedSql, scanModal, limit, offset)
 	return res, err
 }
 
@@ -36,14 +37,14 @@ func scanModal(rows pgx.Rows) (*Modal, error) {
 	return &modal, nil
 }
 
-func CreateDB(modal *Modal) error {
-	replacedSQL := strings.ReplaceAll(createQuery, "schemaName", "istikbal")
+func CreateDB(schemaName string, modal *Modal) error {
+	replacedSQL := strings.ReplaceAll(createQuery, constants.SchemaName, schemaName)
 	err := database.DB.QueryRow(context.Background(), replacedSQL, modal.Name).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Name)
 	return err
 }
 
-func DeleteDB(modalDeleteRequest *ModalDeleteRequest) error {
-	replacedSQL := strings.ReplaceAll(deleteByIdsQuery, "schemaName", "istikbal")
+func DeleteDB(schemaName string, modalDeleteRequest *ModalDeleteRequest) error {
+	replacedSQL := strings.ReplaceAll(deleteByIdsQuery, constants.SchemaName, schemaName)
 	_, err := database.DB.Exec(context.Background(), replacedSQL, modalDeleteRequest.IdList)
 	return err
 }

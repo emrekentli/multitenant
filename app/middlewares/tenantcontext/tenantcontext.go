@@ -16,19 +16,19 @@ func RegisterTenantContext(c fiber.Ctx) error {
 	tenantDomain := c.Get("X-Tenant-Domain")
 	if tenantDomain == "" {
 		log.Println("Tenant Domain bulunamadı")
-		return c.Status(400).SendString("Tenant Domain bulunamadı")
+		return fiber.NewError(fiber.StatusBadRequest, "Tenant Domain bulunamadı")
 	}
 
 	var schemaName string
 	err := database.DB.QueryRow(context.Background(), "SELECT schema_name FROM public.tenants WHERE domain = $1", tenantDomain).Scan(&schemaName)
 	if err != nil {
 		log.Println("Tenant bulunamadı:", err)
-		return c.Status(400).SendString("Tenant bulunamadı")
+		return fiber.NewError(fiber.StatusBadRequest, "Tenant bulunamadı")
 	}
 
 	if schemaName == "" {
 		log.Println("Tenant bulunamadı")
-		return c.Status(400).SendString("Tenant bulunamadı")
+		return fiber.NewError(fiber.StatusBadRequest, "Tenant bulunamadı")
 	}
 
 	c.Locals("tenant", &TenantContext{

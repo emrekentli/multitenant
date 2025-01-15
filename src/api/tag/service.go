@@ -1,16 +1,16 @@
 package tag
 
-func GetAll(limit int, offset int) ([]*Modal, error) {
-	res, err := GetAllDB(limit, offset)
+func GetAll(schemaName string, limit int, offset int) ([]*Modal, error) {
+	res, err := GetAllDB(schemaName, limit, offset)
 	return res, err
 }
 
-func Create(modal *Modal) (*Modal, error) {
-	err := CreateDB(modal)
+func Create(schemaName string, modal *Modal) (*Modal, error) {
+	err := CreateDB(schemaName, modal)
 	return modal, err
 }
 
-func Delete(modalDeleteRequest *ModalDeleteRequest) error {
-	err := DeleteDB(modalDeleteRequest)
+func Delete(schemaName string, modalDeleteRequest *ModalDeleteRequest) error {
+	err := DeleteDB(schemaName, modalDeleteRequest)
 	return err
 }

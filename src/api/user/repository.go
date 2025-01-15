@@ -1,10 +1,11 @@
 package user
 
 import (
+	"app/src/general/constants"
+	"app/src/general/database"
+	"app/src/general/util/query"
+	"app/src/general/util/rest"
 	"context"
-	"github.com/emrekentli/multitenant-boilerplate/config/database"
-	"github.com/emrekentli/multitenant-boilerplate/src/util/query"
-	"github.com/emrekentli/multitenant-boilerplate/src/util/rest"
 	"github.com/jackc/pgx/v5"
 	"strings"
 )
@@ -26,13 +27,15 @@ const findByEmailAndPasswordQuery = `SELECT id, created, modified, email, passwo
 
 const deleteByIdsQuery = `DELETE FROM schemaName.usr WHERE id = ANY($1)`
 
-func GetAllDB(limit, offset int) (*rest.Page[Modal], error) {
-	total, err := query.CountQuery(countQuery)
+func GetAllDB(schemaName string, limit, offset int) (*rest.Page[Modal], error) {
+	replacedCountQuery := strings.ReplaceAll(countQuery, constants.SchemaName, schemaName)
+	total, err := query.CountQuery(replacedCountQuery)
 	if err != nil {
 		return nil, err
 	}
 
-	res, err := query.GetAllDBPage[Modal](getAllQuery, scanModal, total, limit, offset)
+	replacedGetAllQuery := strings.ReplaceAll(getAllQuery, constants.SchemaName, schemaName)
+	res, err := query.GetAllDBPage[Modal](replacedGetAllQuery, scanModal, total, limit, offset)
 	return res, err
 }
 
@@ -45,9 +48,9 @@ func scanModal(rows pgx.Rows) (*Modal, error) {
 	return &modal, nil
 }
 
-func FindByEmailAndPassword(modalLoginRequest *ModalRequest) (*Modal, error) {
+func FindByEmailAndPassword(schemaName string, modalLoginRequest *ModalRequest) (*Modal, error) {
 	var modal Modal
-	replacedSql := strings.ReplaceAll(findByEmailAndPasswordQuery, "schemaName", "istikbal")
+	replacedSql := strings.ReplaceAll(findByEmailAndPasswordQuery, constants.SchemaName, schemaName)
 	err := database.DB.QueryRow(context.Background(), replacedSql, modalLoginRequest.Email, modalLoginRequest.Password).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
 	if err != nil {
 		return nil, err
@@ -55,9 +58,9 @@ func FindByEmailAndPassword(modalLoginRequest *ModalRequest) (*Modal, error) {
 	return &modal, nil
 }
 
-func GetByIdDB(id string) (*Modal, error) {
+func GetByIdDB(schemaName string, id string) (*Modal, error) {
 	var modal Modal
-	replacedSql := strings.ReplaceAll(getByIdQuery, "schemaName", "istikbal")
+	replacedSql := strings.ReplaceAll(getByIdQuery, constants.SchemaName, schemaName)
 	err := database.DB.QueryRow(context.Background(), replacedSql, id).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
 	if err != nil {
 		return nil, err
@@ -65,20 +68,20 @@ func GetByIdDB(id string) (*Modal, error) {
 	return &modal, nil
 }
 
-func CreateDB(modal *Modal) error {
-	replacedSql := strings.ReplaceAll(createQuery, "schemaName", "istikbal")
+func CreateDB(schemaName string, modal *Modal) error {
+	replacedSql := strings.ReplaceAll(createQuery, constants.SchemaName, schemaName)
 	err := database.DB.QueryRow(context.Background(), replacedSql, modal.Email, modal.Password).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
 	return err
 }
 
-func UpdateDB(modal *Modal, id string) error {
-	replacedSql := strings.ReplaceAll(updateByIdQuery, "schemaName", "istikbal")
+func UpdateDB(schemaName string, modal *Modal, id string) error {
+	replacedSql := strings.ReplaceAll(updateByIdQuery, constants.SchemaName, schemaName)
 	err := database.DB.QueryRow(context.Background(), replacedSql, modal.Email, modal.Password, id).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
 	return err
 }
 
-func DeleteDB(modalDeleteRequest *ModalDeleteRequest) error {
-	replacedSql := strings.ReplaceAll(deleteByIdsQuery, "schemaName", "istikbal")
+func DeleteDB(schemaName string, modalDeleteRequest *ModalDeleteRequest) error {
+	replacedSql := strings.ReplaceAll(deleteByIdsQuery, constants.SchemaName, schemaName)
 	_, err := database.DB.Exec(context.Background(), replacedSql, modalDeleteRequest.IdList)
 	return err
 }

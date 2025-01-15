@@ -1,16 +1,17 @@
 package user
 
 import (
-	"github.com/emrekentli/multitenant-boilerplate/src/util/rest"
+	"app/app/middlewares/jwt"
+	"app/src/general/util/rest"
 )
 
-func GetAll(limit int, offset int) (*rest.Page[Modal], error) {
-	res, err := GetAllDB(limit, offset)
+func GetAll(schemaName string, limit int, offset int) (*rest.Page[Modal], error) {
+	res, err := GetAllDB(schemaName, limit, offset)
 	return res, err
 }
 
-func Login(modalLoginRequest *ModalRequest) (*JwtResponse, error) {
-	res, err := FindByEmailAndPassword(modalLoginRequest)
+func Login(schemaName string, modalLoginRequest *ModalRequest) (*JwtResponse, error) {
+	res, err := FindByEmailAndPassword(schemaName, modalLoginRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -23,22 +24,23 @@ func Login(modalLoginRequest *ModalRequest) (*JwtResponse, error) {
 	return &JwtResponse{Token: jwtStr}, nil
 }
 
-func Get(id string) (*Modal, error) {
-	res, err := GetByIdDB(id)
+func Get(schemaName string, id string) (*Modal, error) {
+
+	res, err := GetByIdDB(schemaName, id)
 	return res, err
 }
 
-func Create(modal *Modal) (*Modal, error) {
-	err := CreateDB(modal)
+func Create(schemaName string, modal *Modal) (*Modal, error) {
+	err := CreateDB(schemaName, modal)
 	return modal, err
 }
 
-func Update(id string, modal *Modal) error {
-	err := UpdateDB(modal, id)
+func Update(schemaName string, id string, modal *Modal) error {
+	err := UpdateDB(schemaName, modal, id)
 	return err
 }
 
-func Delete(modalDeleteRequest *ModalDeleteRequest) error {
-	err := DeleteDB(modalDeleteRequest)
+func Delete(schemaName string, modalDeleteRequest *ModalDeleteRequest) error {
+	err := DeleteDB(schemaName, modalDeleteRequest)
 	return err
 }
