@@ -51,7 +51,6 @@ func deleteByIds(c fiber.Ctx) error {
 
 func Register(router fiber.Router) {
 	group := router.Group("/blog")
-	group.Use(tenantcontext.RegisterTenantContext)
 	group.Get("/", getAll)
 	group.Post("/", create)
 	group.Put("/:id", update)

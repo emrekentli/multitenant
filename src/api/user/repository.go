@@ -23,7 +23,7 @@ const updateByIdQuery = `UPDATE schemaName.usr SET email = $1, password = $2 WHE
 
 const countQuery = `SELECT COUNT(*) FROM schemaName.usr`
 
-const findByEmailAndPasswordQuery = `SELECT id, created, modified, email, password FROM schemaName.usr WHERE email = $1 AND password = $2`
+const findByEmail = `SELECT id, created, modified, email, password FROM schemaName.usr WHERE email = $1`
 
 const deleteByIdsQuery = `DELETE FROM schemaName.usr WHERE id = ANY($1)`
 
@@ -48,10 +48,10 @@ func scanModal(rows pgx.Rows) (*Modal, error) {
 	return &modal, nil
 }
 
-func FindByEmailAndPassword(schemaName string, modalLoginRequest *ModalRequest) (*Modal, error) {
+func FindByEmail(schemaName string, modalLoginRequest *ModalRequest) (*Modal, error) {
 	var modal Modal
-	replacedSql := strings.ReplaceAll(findByEmailAndPasswordQuery, constants.SchemaName, schemaName)
-	err := database.DB.QueryRow(context.Background(), replacedSql, modalLoginRequest.Email, modalLoginRequest.Password).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
+	replacedSql := strings.ReplaceAll(findByEmail, constants.SchemaName, schemaName)
+	err := database.DB.QueryRow(context.Background(), replacedSql, modalLoginRequest.Email).Scan(&modal.Id, &modal.Created, &modal.Modified, &modal.Email, &modal.Password)
 	if err != nil {
 		return nil, err
 	}

@@ -9,6 +9,9 @@ import (
 func Load() {
 	database.Connect()
 	defer database.Close()
-	migrations.RunMigrations()
+	err := migrations.RunMigrations()
+	if err != nil {
+		return
+	}
 	server.New()
 }

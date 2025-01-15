@@ -2,7 +2,9 @@ package user
 
 import (
 	"app/app/middlewares/jwt"
+	"app/src/general/util/hash"
 	"app/src/general/util/rest"
+	"errors"
 )
 
 func GetAll(schemaName string, limit int, offset int) (*rest.Page[Modal], error) {
@@ -11,9 +13,13 @@ func GetAll(schemaName string, limit int, offset int) (*rest.Page[Modal], error)
 }
 
 func Login(schemaName string, modalLoginRequest *ModalRequest) (*JwtResponse, error) {
-	res, err := FindByEmailAndPassword(schemaName, modalLoginRequest)
+	res, err := FindByEmail(schemaName, modalLoginRequest)
 	if err != nil {
 		return nil, err
+	}
+	isMatch := hash.Match(modalLoginRequest.Password, res.Password)
+	if !isMatch {
+		return nil, errors.New("invalid credentials")
 	}
 
 	jwtStr, err := jwt.CreateJwt(res.Id)

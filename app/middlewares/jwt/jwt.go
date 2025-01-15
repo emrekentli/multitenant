@@ -3,6 +3,7 @@ package jwt
 import (
 	"app/config"
 	"app/src/general/util/rest"
+	"errors"
 	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"strings"
@@ -10,7 +11,7 @@ import (
 )
 
 var specialAuthorizedRoutes = []string{
-	"/blog",
+	"/login",
 }
 
 func RegisterJwtMiddleware(app *fiber.App) {
@@ -18,10 +19,10 @@ func RegisterJwtMiddleware(app *fiber.App) {
 		if filterJwtMiddleware(c) {
 			return c.Next()
 		}
-		authHeader := c.Cookies("Authorization")
 
+		authHeader := c.Get("Authorization")
 		if authHeader == "" {
-			authHeader = strings.Replace(c.Get("Authorization"), "Bearer ", "", 1)
+			authHeader = c.Cookies("Authorization")
 		}
 
 		if authHeader == "" {
@@ -33,28 +34,23 @@ func RegisterJwtMiddleware(app *fiber.App) {
 			return onUnAuthorized(c)
 		}
 
-		if !token.Valid {
-			return onUnAuthorized(c)
-		}
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			return onUnAuthorized(c)
 		}
 		c.Locals("ID", claims["ID"])
+
 		return c.Next()
 	})
 }
 
 func filterJwtMiddleware(c fiber.Ctx) bool {
-	if strings.Contains(c.Path(), "/api") {
-		for _, route := range specialAuthorizedRoutes {
-			if strings.Contains(c.Path(), route) {
-				return true
-			}
+	for _, route := range specialAuthorizedRoutes {
+		if strings.Contains(c.Path(), route) {
+			return true
 		}
-		return false
 	}
-	return true
+	return false
 }
 
 func onUnAuthorized(c fiber.Ctx) error {
@@ -62,11 +58,21 @@ func onUnAuthorized(c fiber.Ctx) error {
 }
 
 func VerifyToken(tokenString string) (*jwt.Token, error) {
+	// Token'ı parse et
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return config.JwtSecretByte, nil
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// Token'ın expiration süresini kontrol et
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		if exp, ok := claims["exp"].(float64); ok {
+			if time.Now().Unix() > int64(exp) {
+				return nil, errors.New("token expired")
+			}
+		}
 	}
 	return token, nil
 }
