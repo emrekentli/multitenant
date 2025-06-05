@@ -1,6 +1,7 @@
 package role
 
 import (
+	"app/app/middlewares/jwt"
 	"app/app/middlewares/tenantcontext"
 	"app/src/general/util/rest"
 	"github.com/gofiber/fiber/v3"
@@ -49,7 +50,7 @@ func deleteByIds(c fiber.Ctx) error {
 
 func Register(router fiber.Router) {
 	group := router.Group("/roles")
-	group.Get("/", getAll)
+	group.Get("/", getAll, jwt.RequirePermission("blog_read"))
 	group.Post("/", create)
 	group.Put("/:id", update)
 	group.Delete("/", deleteByIds)

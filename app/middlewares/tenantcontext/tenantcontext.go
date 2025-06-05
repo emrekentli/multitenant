@@ -1,8 +1,7 @@
 package tenantcontext
 
 import (
-	"app/src/general/database"
-	"context"
+	"app/src/general/cache"
 	"github.com/gofiber/fiber/v3"
 	"log"
 )
@@ -19,16 +18,10 @@ func RegisterTenantContext(c fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, "Tenant Domain bulunamadı")
 	}
 
-	var schemaName string
-	err := database.DB.QueryRow(context.Background(), "SELECT schema_name FROM public.tenants WHERE domain = $1", tenantDomain).Scan(&schemaName)
-	if err != nil {
-		log.Println("Tenant bulunamadı:", err)
-		return fiber.NewError(fiber.StatusBadRequest, "Tenant bulunamadı")
-	}
-
-	if schemaName == "" {
-		log.Println("Tenant bulunamadı")
-		return fiber.NewError(fiber.StatusBadRequest, "Tenant bulunamadı")
+	schemaName, exists := cache.GetSchemaByDomain(tenantDomain)
+	if !exists {
+		log.Printf("Tenant Domain '%s' için şema bulunamadı", tenantDomain)
+		return fiber.NewError(fiber.StatusNotFound, "Tenant Domain için şema bulunamadı")
 	}
 
 	c.Locals("tenant", &TenantContext{
